@@ -6,14 +6,14 @@
  Concretely, this means that it should implement a very simple TCP-based protocol.
 **/
 
-// charge la librairie TCP 
+// TCP 
 var net = require('net');
-// charge la librairie UDP 
+// UDP 
 var dgram = require('dgram');
-//charge la librairie time
+//format time
 var moment   = require("moment");
 
-//TCP protocol
+//TCP port
 const PORT_TCP = 2205;
 
 //UDP protocol
@@ -29,7 +29,7 @@ var instrumentsAndSound = new Map([
   ["boum-boum", "drum"]
 ]);
 
-//Classe Misician 
+// Misician class 
 function Musician (uuid, instrument, activeSince) {
   this.uuid = uuid; 
 	this.instrument = instrument;
@@ -38,17 +38,17 @@ function Musician (uuid, instrument, activeSince) {
 
 function Auditor() {
 
-   var listMusicians = new Map(); // map pour stocker les musiciens vivant 
+   var listMusicians = new Map(); // map pour stocker les musiciens actifs 
 
    /**
-    * cette fonction permet d'ajouter un musicien dans la map.
+    * add a musician to the list.
     */
    this.addMusician = function(musician) {
      listMusicians.set(musician.uuid, musician);
    } 
    
      /**
-    * cette fonction permet d'enlévé un musicien de la map.
+    * removes musician to the list.
     */
    var removeMusician = function(musician) {
      listMusicians.delete(musician.uuid);
@@ -56,25 +56,25 @@ function Auditor() {
    
    
     /**
-    * cette fonction permet de vérifier si mon musicien est encore actif.
+    * checks if a musician is still alive.
     */
    
     var isMusicianActive = function(musician) {
      var musicianObject = listMusicians.get(musician.uuid);
 
      /* if the musician is in the list, we check if he's active */
-     if (typeof musicianObject !== "undefined") { // verifier si le musicien est dans la liste 
+     if (typeof musicianObject !== "undefined") {  
 	 
-	 // retourner true si mon musicien est encore actif
+	 // retourn true if a musician is inactve during last 5 seconds
        return Date.now() - musicianObject.activeSince <= 5000; // time in ms
      }
 
-     return false; // retourner false si nom 
+     return false; // else 
    }
    
    
     /**
-    * supprime tous les musiciens inactifs de la map.
+    * remove all inactive musicians (map).
     */
    this.removeUnactiveMusicians = function() {
      for (var musician of listMusicians.values()) {
@@ -85,14 +85,14 @@ function Auditor() {
    }
    
    
-      /**
-    * Retourner un tableau de tous les musiciens de la liste(map).
+    /**
+    * give an array of all musicians(map).
     */
    this.getArrayMusicians = function() {
      var arrayMusician = [];
 
      for (var musician of listMusicians.values()) {
-       musician.activeSince = moment(musician.activeSince); // Formate time
+       musician.activeSince = moment(musician.activeSince); 
 
        arrayMusician.push(musician);
      }
@@ -106,14 +106,14 @@ var	udpSocket	=	dgram.createSocket("udp4");
 var auditor = new Auditor();
 
 
-/*Cree un socket udp et join le groupe multicast*/
+/*Create a udp socket and join the multicast group */
 udpSocket.bind(PORT_UDP,	function() {
 	console.log("Auditor commence à ecouter...");
   udpSocket.addMembership(ADDRESS_MULTICAST);
 });
 
 
-/*Quand un datagram arrive , il ajoute un musicien a la liste de l'auditeur*/
+/*when a datagram arrives, add a musician to the auditor*/
 udpSocket.on("message", function(msg, rinfo) {
   var newMusicianFromGroup = JSON.parse(msg.toString());
 
@@ -125,8 +125,8 @@ udpSocket.on("message", function(msg, rinfo) {
 });
 
 
-/*Cree le serveur TCP et quand le segment TCP arrive, il envoie au client un 
-    tableau  de tous les musiciens actifs*/
+/*Create TCP server and when a TCP segment arrives , send 
+    list of all active musicians to the client*/
 var tcpSocket = net.createServer(function(socket) {
 	console.log("The socket is bound and the server is listening for connection requests.");
 	console.log("Socket value: %j", tcpSocket.address());
@@ -136,7 +136,6 @@ var tcpSocket = net.createServer(function(socket) {
 
 tcpSocket.listen(PORT_TCP);
 
-//console.log(`TCP Server started at: ${PORT_TCP}`);
 
-/* Nous supprimons chaque 5 seconde les musiciens inactifs de auditeur */
-setInterval(auditor.removeUnactiveMusicians, 5000);
+/* remove every 3 seconds inactive musicieans from the auditor */
+setInterval(auditor.removeUnactiveMusicians, 3000);
