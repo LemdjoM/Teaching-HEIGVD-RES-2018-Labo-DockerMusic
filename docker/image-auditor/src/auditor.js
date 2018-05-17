@@ -17,8 +17,8 @@ var moment   = require("moment");
 const PORT_TCP = 2205;
 
 //UDP protocol
-const PORT_UDP = 3333;
-const ADDRESS_MULTICAST = "230.185.192.108";
+const PORT_UDP = 9907;
+const ADDRESS_MULTICAST = "239.255.22.5";
 
 
 var instrumentsAndSound = new Map([
@@ -138,5 +138,5 @@ tcpSocket.listen(PORT_TCP);
 
 //console.log(`TCP Server started at: ${PORT_TCP}`);
 
-/* Nous supprimons chaque 3 seconde les musiciens inactifs de auditeur */
-setInterval(auditor.removeUnactiveMusicians, 3000);
+/* Nous supprimons chaque 5 seconde les musiciens inactifs de auditeur */
+setInterval(auditor.removeUnactiveMusicians, 5000);
