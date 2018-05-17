@@ -44,7 +44,7 @@ var musicien;   // le musicien qui joue d'un instrument
 
 // protocol UDP
 const PORT_UDP = 3333;
-const ADDRESS_MULTICAST = "230.185.192.108";
+const ADDRESS_MULTICAST = ""239.255.22.5"";
 
 const INSTRUMENTS = ["piano", "trumpet", "flute", "violin", "drum"];
 
