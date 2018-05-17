@@ -8,48 +8,55 @@
 		docker run -d res/musician instrument
 */
 
-// module  Node.js pour travailler avec UDP 
+// Node.js module to work with UDP 
 var dgram = require('dgram');
 
-// module Node.js pour générer les uuids
-var uuid = require('node-uuid');
+// allows to generate uuids
+const uuid = require('uuid/v1');
 
 // creation d'un socket datagram. Nous l'utiliserons pour envoyer nos datagrams
 var socket = dgram.createSocket('udp4');
 
+//UDP protocol
+const PORT_UDP = 9907;
+const ADDRESS_MULTICAST = "239.255.22.5";
 
-// Declaration des fonctions et classes
+
+//functions and classes
 
 /**
- * Classe instrument
+ * Class that represents an instrument
  */
-function Instrument(nom, son) {
-  this.nom = nom;
-  this.son = son;
+function Instrument(name, sound) {
+  this.name = name;
+  this.sound = sound;
 }
 
 /**
- * Classe musicien
+ *  musician class
  */
-function Musicien(instrument) {
-  this.uuid = uuid.v1();
+function Musician(instrument) {
+  this.uuid = uuid();
   this.instrument = instrument;
 }
 
-var playload;   // string JSON envoyé par UDP
-var message;    // buffer qui contient la string JSON envoyée par UDP 
-var instrument; // instrument du musicien 
-var param;   // l'argument qui est passé au script 
-var musicien;   // le musicien qui joue d'un instrument 
+var dgram    = require("dgram");
 
-// protocol UDP
-const PORT_UDP = 3333;
-const ADDRESS_MULTICAST = ""239.255.22.5"";
+//  variables and constants
+
+var socket   = dgram.createSocket("udp4");
+
+var playload;   // string JSON sent by UDP
+var message;    // buffer that contains the string JSON sent by UDP
+var instrument; // the instrument of the musician
+var argument;   // the argument that is passed on the script
+var musician;   // the musician who plays an instrument
+
 
 const INSTRUMENTS = ["piano", "trumpet", "flute", "violin", "drum"];
 
-/* instruments et sons */
-var sons = {
+/* instruments sound */
+var Sounds = {
   piano   : "ti-ta-ti",
   trumpet : "pouet",
   flute   : "trulu",
@@ -57,36 +64,41 @@ var sons = {
   drum    : "boum-boum"
 };
 
-/* si l'argument n'a pas été donné, nous affichons un message d'erreur et fermons le rogramme */
+//------------------------------------------------------------------------------
+// Main Script
+
+/* if the argument wasn't given, we print an error and exit the program */
 if (typeof process.argv[2] === "undefined") {
-  console.log("Erreur: l'argument pour instrument est manquant ");
+  console.log("Error: missing argument for instrument");
   return;
 }
 
-param = process.argv[2].toLowerCase();
+argument = process.argv[2].toLowerCase();
 
-   
-/* si l'argument ne correspond à aucun instrument, nous affichons un message d'erreur 
-   et fermons le programme, sinon nous créons l'instrument*/
-if (~INSTRUMENTS.indexOf(param)) {
-  instrument = new Instrument(param, sons[param]);
+/* if the argument doesn't match with any instruments then we print an error
+   and we exit the program, else we create the instrument */
+if (~INSTRUMENTS.indexOf(argument)) {
+  instrument = new Instrument(argument, Sounds[argument]);
 
 } else {
 
-  console.log("Erreur: l'instrument \"" + argument + "\" n'existe pas");
+  console.log("Error: instrument \"" + argument + "\" doesn't exist");
   return;
 }
 
-/*Cree un musicien en lui assignant un instrument */
-musicien = new Musicien(instrument);
+musician = new Musician(instrument);
 
-/* cree la string JSON qui va être envoyée par datagram UDP */
-playload = JSON.stringify({uuid : musicien.uuid, son : musicien.instrument.son});
+/* create the JSON string sent by datagram UDP */
+playload = JSON.stringify({uuid : musician.uuid, sound : musician.instrument.sound});
 message  = new Buffer(playload);
 
-/* Nous utilisons la règle pour envoyer chaque 3 secondes un datagram UDP
-   qui contient la string JSON */
+
+/* we use this rule to send every 3 seconds a datagram UDP
+   which contains the JSON string */
 setInterval(function() {
   socket.send(message, 0, message.length,	PORT_UDP, ADDRESS_MULTICAST);
 }, 3000);
+
+
+
 
