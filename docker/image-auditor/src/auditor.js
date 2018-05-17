@@ -15,6 +15,7 @@ var moment   = require("moment");
 
 //TCP protocol
 const PORT_TCP = 2205;
+
 //UDP protocol
 const PORT_UDP = 3333;
 const ADDRESS_MULTICAST = "230.185.192.108";
@@ -35,43 +36,45 @@ function Musician (uuid, instrument, activeSince) {
 	this.activeSince = activeSince;
 }
 
-// classe Auditor 
- function Auditor() {
+function Auditor() {
 
-	// liste des musiciens actifs
-   var listMusicians = new Map(); 
+   var listMusicians = new Map(); // map pour stocker les musiciens vivant 
 
    /**
-    * Cette fonction permet d'ajouter un musicien à la liste.
+    * cette fonction permet d'ajouter un musicien dans la map.
     */
    this.addMusician = function(musician) {
      listMusicians.set(musician.uuid, musician);
-   }
-
-   /**
-    * Cette fonction permet de retirer un musicien de la liste.
+   } 
+   
+     /**
+    * cette fonction permet d'enlévé un musicien de la map.
     */
    var removeMusician = function(musician) {
      listMusicians.delete(musician.uuid);
    }
-
-   /**
-    * Cette fonction vérifie si un musicien est actif checks if a musician is active.
-	* Un musicien est actif s'il joue un son durant les 5 dernières secondes
-    **/
-   var isMusicianActive = function(musician) {
+   
+   
+    /**
+    * cette fonction permet de vérifier si mon musicien est encore actif.
+    */
+   
+    var isMusicianActive = function(musician) {
      var musicianObject = listMusicians.get(musician.uuid);
 
-	 /*Si le musicien est dans la liste, nous vérifions s'il est actif*/
-     if (typeof musicianObject !== "undefined") {
-       return Date.now() - musicianObject.activeSince <= 5000; // temps en ms
+     /* if the musician is in the list, we check if he's active */
+     if (typeof musicianObject !== "undefined") { // verifier si le musicien est dans la liste 
+	 
+	 // retourner true si mon musicien est encore actif
+       return Date.now() - musicianObject.activeSince <= 5000; // time in ms
      }
 
-     return false;
+     return false; // retourner false si nom 
    }
-
-   /**
-    * cette fonction enlève tous les musiciens inactifs.
+   
+   
+    /**
+    * supprime tous les musiciens inactifs de la map.
     */
    this.removeUnactiveMusicians = function() {
      for (var musician of listMusicians.values()) {
@@ -80,15 +83,16 @@ function Musician (uuid, instrument, activeSince) {
        }
      }
    }
-
-   /**
-    *  cette fonction retourne un tableau avec tous les musiciens.
+   
+   
+      /**
+    * Retourner un tableau de tous les musiciens de la liste(map).
     */
    this.getArrayMusicians = function() {
      var arrayMusician = [];
 
      for (var musician of listMusicians.values()) {
-       musician.activeSince = moment(musician.activeSince); // Formate le temps
+       musician.activeSince = moment(musician.activeSince); // Formate time
 
        arrayMusician.push(musician);
      }
@@ -97,7 +101,6 @@ function Musician (uuid, instrument, activeSince) {
    }
  }
 
-
 var	udpSocket	=	dgram.createSocket("udp4");
 
 var auditor = new Auditor();
@@ -105,6 +108,7 @@ var auditor = new Auditor();
 
 /*Cree un socket udp et join le groupe multicast*/
 udpSocket.bind(PORT_UDP,	function() {
+	console.log("Auditor commence à ecouter...");
   udpSocket.addMembership(ADDRESS_MULTICAST);
 });
 
@@ -124,14 +128,15 @@ udpSocket.on("message", function(msg, rinfo) {
 /*Cree le serveur TCP et quand le segment TCP arrive, il envoie au client un 
     tableau  de tous les musiciens actifs*/
 var tcpSocket = net.createServer(function(socket) {
-  socket.write(JSON.stringify(auditor.getArrayMusicians()));
-  //socket.write("Hello world!");
-  socket.end();
+	console.log("The socket is bound and the server is listening for connection requests.");
+	console.log("Socket value: %j", tcpSocket.address());
+	socket.write(JSON.stringify(auditor.getArrayMusicians()));
+	socket.end();
 });
 
 tcpSocket.listen(PORT_TCP);
 
-console.log(`TCP Server started at: ${PORT_TCP}`);
+//console.log(`TCP Server started at: ${PORT_TCP}`);
 
 /* Nous supprimons chaque 3 seconde les musiciens inactifs de auditeur */
 setInterval(auditor.removeUnactiveMusicians, 3000);
